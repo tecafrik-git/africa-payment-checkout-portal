@@ -121,8 +121,8 @@ describe('Payment Routes Integration Tests', () => {
             it('should prepopulate firstName when provided', async () => {
                 const response = await request(app)
                     .get('/payment')
-                    .query({ 
-                        amount: '5000', 
+                    .query({
+                        amount: '5000',
                         productName: 'Test Product',
                         firstName: 'John'
                     });
@@ -134,8 +134,8 @@ describe('Payment Routes Integration Tests', () => {
             it('should prepopulate lastName when provided', async () => {
                 const response = await request(app)
                     .get('/payment')
-                    .query({ 
-                        amount: '5000', 
+                    .query({
+                        amount: '5000',
                         productName: 'Test Product',
                         lastName: 'Doe'
                     });
@@ -147,8 +147,8 @@ describe('Payment Routes Integration Tests', () => {
             it('should prepopulate phoneNumber when provided', async () => {
                 const response = await request(app)
                     .get('/payment')
-                    .query({ 
-                        amount: '5000', 
+                    .query({
+                        amount: '5000',
                         productName: 'Test Product',
                         phoneNumber: '+221771234567'
                     });
@@ -160,8 +160,8 @@ describe('Payment Routes Integration Tests', () => {
             it('should preselect valid paymentMethod WAVE', async () => {
                 const response = await request(app)
                     .get('/payment')
-                    .query({ 
-                        amount: '5000', 
+                    .query({
+                        amount: '5000',
                         productName: 'Test Product',
                         paymentMethod: 'WAVE'
                     });
@@ -173,8 +173,8 @@ describe('Payment Routes Integration Tests', () => {
             it('should preselect valid paymentMethod ORANGE_MONEY', async () => {
                 const response = await request(app)
                     .get('/payment')
-                    .query({ 
-                        amount: '5000', 
+                    .query({
+                        amount: '5000',
                         productName: 'Test Product',
                         paymentMethod: 'ORANGE_MONEY'
                     });
@@ -186,21 +186,23 @@ describe('Payment Routes Integration Tests', () => {
             it('should ignore invalid paymentMethod and show default empty selection', async () => {
                 const response = await request(app)
                     .get('/payment')
-                    .query({ 
-                        amount: '5000', 
+                    .query({
+                        amount: '5000',
                         productName: 'Test Product',
                         paymentMethod: 'INVALID_METHOD'
                     });
 
                 expect(response.status).toBe(200);
-                expect(response.text).not.toContain('selected');
+                // Check that no payment method option has the selected attribute
+                expect(response.text).not.toMatch(/<option value="WAVE" selected/);
+                expect(response.text).not.toMatch(/<option value="ORANGE_MONEY" selected/);
             });
 
             it('should prepopulate all customer fields when provided', async () => {
                 const response = await request(app)
                     .get('/payment')
-                    .query({ 
-                        amount: '5000', 
+                    .query({
+                        amount: '5000',
                         productName: 'Test Product',
                         firstName: 'John',
                         lastName: 'Doe',
@@ -218,8 +220,8 @@ describe('Payment Routes Integration Tests', () => {
             it('should handle partial prepopulation correctly', async () => {
                 const response = await request(app)
                     .get('/payment')
-                    .query({ 
-                        amount: '5000', 
+                    .query({
+                        amount: '5000',
                         productName: 'Test Product',
                         firstName: 'John',
                         paymentMethod: 'WAVE'
@@ -235,8 +237,8 @@ describe('Payment Routes Integration Tests', () => {
             it('should handle case-insensitive paymentMethod values', async () => {
                 const response = await request(app)
                     .get('/payment')
-                    .query({ 
-                        amount: '5000', 
+                    .query({
+                        amount: '5000',
                         productName: 'Test Product',
                         paymentMethod: 'wave'
                     });
@@ -251,8 +253,8 @@ describe('Payment Routes Integration Tests', () => {
                 // First, verify the form renders with prepopulated values
                 const getResponse = await request(app)
                     .get('/payment')
-                    .query({ 
-                        amount: '5000', 
+                    .query({
+                        amount: '5000',
                         productName: 'Test Product',
                         firstName: 'John',
                         lastName: 'Doe',
@@ -290,8 +292,8 @@ describe('Payment Routes Integration Tests', () => {
                 // Form was prepopulated with valid data
                 const getResponse = await request(app)
                     .get('/payment')
-                    .query({ 
-                        amount: '5000', 
+                    .query({
+                        amount: '5000',
                         productName: 'Test Product',
                         firstName: 'John',
                         phoneNumber: '+221771234567'
@@ -319,8 +321,8 @@ describe('Payment Routes Integration Tests', () => {
                 // Form prepopulated with some values
                 const getResponse = await request(app)
                     .get('/payment')
-                    .query({ 
-                        amount: '5000', 
+                    .query({
+                        amount: '5000',
                         productName: 'Test Product',
                         firstName: 'John'
                     });

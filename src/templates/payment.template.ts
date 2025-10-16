@@ -47,6 +47,8 @@ export function renderPaymentForm(data: PaymentFormData): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Payment - ${productName}</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@24.7.0/build/css/intlTelInput.css">
   <style>
     * {
       margin: 0;
@@ -167,6 +169,86 @@ export function renderPaymentForm(data: PaymentFormData): string {
       margin-top: 4px;
     }
     
+    /* intl-tel-input custom styling */
+    .iti {
+      width: 100%;
+      display: block;
+    }
+    
+    .iti__input {
+      width: 100%;
+      padding: 12px;
+      padding-left: 52px;
+      border: 2px solid #000000;
+      border-radius: 4px;
+      font-size: 16px;
+      background-color: #ffffff;
+      color: #000000;
+    }
+    
+    .iti__input:focus {
+      outline: none;
+      border-color: #FFDB15;
+      box-shadow: 0 0 0 3px rgba(255, 219, 21, 0.2);
+    }
+    
+    .iti__input.error {
+      border-color: #c62828;
+    }
+    
+    .iti__input.valid {
+      border-color: #2e7d32;
+    }
+    
+    .iti__selected-country {
+      background-color: #ffffff;
+      border-right: 1px solid #000000;
+    }
+    
+    .iti__selected-country:hover {
+      background-color: #f5f5f5;
+    }
+    
+    .iti__country-list {
+      border: 2px solid #000000;
+      border-radius: 4px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      max-height: 300px;
+    }
+    
+    .iti__country:hover {
+      background-color: #FFDB15;
+    }
+    
+    .iti__country.iti__highlight {
+      background-color: #FFDB15;
+    }
+    
+    .iti__search-input {
+      border: 2px solid #000000;
+      border-radius: 4px;
+      padding: 8px;
+      margin: 8px;
+      width: calc(100% - 16px);
+    }
+    
+    .iti__search-input:focus {
+      outline: none;
+      border-color: #FFDB15;
+      box-shadow: 0 0 0 2px rgba(255, 219, 21, 0.2);
+    }
+    
+    .iti__dial-code {
+      color: #666666;
+    }
+    
+    #phoneError {
+      display: none;
+      color: #c62828;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+    
     @media (max-width: 600px) {
       .container {
         padding: 20px;
@@ -178,6 +260,13 @@ export function renderPaymentForm(data: PaymentFormData): string {
       
       .product-amount {
         font-size: 24px;
+      }
+      
+      /* Mobile fullscreen popup styling */
+      .iti--fullscreen-popup .iti__country-list {
+        max-height: none;
+        border: none;
+        border-radius: 0;
       }
     }
   </style>
@@ -212,11 +301,14 @@ export function renderPaymentForm(data: PaymentFormData): string {
         <input 
           type="tel" 
           id="phoneNumber" 
-          name="phoneNumber" 
+          name="phoneNumber_display" 
           value="${phoneNumber || ''}"
-          placeholder="+221771234567"
-          pattern="\\+?[0-9]{10,15}"
           required>
+        <input 
+          type="hidden" 
+          id="phoneNumberFull" 
+          name="phoneNumber">
+        <div id="phoneError"></div>
       </div>
       
       <div class="form-group">
@@ -259,6 +351,157 @@ export function renderPaymentForm(data: PaymentFormData): string {
       }
     });
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@24.7.0/build/js/intlTelInput.min.js"></script>
+  <script>
+    // Initialize intl-tel-input with graceful degradation
+    const phoneInput = document.querySelector("#phoneNumber");
+    let iti = null;
+    
+    // Check if intl-tel-input library loaded successfully
+    if (typeof window.intlTelInput !== 'undefined') {
+      try {
+        iti = window.intlTelInput(phoneInput, {
+          // Default to Senegal
+          initialCountry: "sn",
+          
+          // Preferred West African countries at the top of the list
+          preferredCountries: ["sn", "ci", "ml", "bf", "gn"],
+          
+          // Load utils for validation and formatting
+          utilsScript: "https://cdn.jsdelivr.net/npm/intl-tel-input@24.7.0/build/js/utils.js",
+          
+          // Format as user types
+          formatAsYouType: true,
+          
+          // Automatically format on display
+          formatOnDisplay: true,
+          
+          // Strict mode for input validation
+          strictMode: true,
+          
+          // Separate dial code display
+          separateDialCode: true,
+          
+          // Enable country search
+          countrySearch: true,
+          
+          // Use fullscreen popup on mobile
+          useFullscreenPopup: true,
+          
+          // Validation number types (mobile)
+          validationNumberTypes: ["MOBILE"],
+          
+          // Auto placeholder based on selected country
+          autoPlaceholder: "polite"
+        });
+      } catch (error) {
+        console.error('Failed to initialize intl-tel-input:', error);
+        console.log('Falling back to standard HTML5 tel input');
+        // Fall back to standard HTML5 tel input
+        iti = null;
+      }
+    } else {
+      console.error('intl-tel-input library failed to load from CDN');
+      console.log('Falling back to standard HTML5 tel input');
+    }
+    
+    // Form submission handler with validation
+    const form = document.querySelector('form');
+    const phoneNumberFull = document.querySelector("#phoneNumberFull");
+    const errorContainer = document.querySelector("#phoneError");
+    
+    // Helper function to map error codes to user-friendly messages
+    function getErrorMessage(errorCode) {
+      if (iti && window.intlTelInput && window.intlTelInput.utils) {
+        const validationError = window.intlTelInput.utils.validationError;
+        const errorMap = {
+          [validationError.INVALID_COUNTRY_CODE]: 'Invalid country code',
+          [validationError.TOO_SHORT]: 'Phone number is too short',
+          [validationError.TOO_LONG]: 'Phone number is too long',
+          [validationError.IS_POSSIBLE_LOCAL_ONLY]: 'Phone number is not valid for mobile use',
+          [validationError.INVALID_LENGTH]: 'Invalid phone number length'
+        };
+        return errorMap[errorCode] || 'Please enter a valid phone number';
+      }
+      return 'Please enter a valid phone number';
+    }
+    
+    // Real-time validation on blur (focus loss)
+    phoneInput.addEventListener('blur', function() {
+      if (phoneInput.value.trim()) {
+        // Only use intl-tel-input validation if library loaded successfully
+        if (iti && iti.isValidNumber) {
+          if (iti.isValidNumber()) {
+            phoneInput.classList.remove('error');
+            phoneInput.classList.add('valid');
+            errorContainer.style.display = 'none';
+          } else {
+            phoneInput.classList.add('error');
+            phoneInput.classList.remove('valid');
+            const errorCode = iti.getValidationError();
+            errorContainer.textContent = getErrorMessage(errorCode);
+            errorContainer.style.display = 'block';
+          }
+        }
+        // If library not loaded, rely on HTML5 validation (no visual feedback on blur)
+      }
+    });
+    
+    // Clear validation styling while user is typing
+    phoneInput.addEventListener('input', function() {
+      phoneInput.classList.remove('error', 'valid');
+      errorContainer.style.display = 'none';
+    });
+    
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      let phoneNumber;
+      
+      // If intl-tel-input is available, use it for validation and formatting
+      if (iti && iti.isValidNumber && iti.getNumber) {
+        // Validate phone number
+        if (!iti.isValidNumber()) {
+          // Show error
+          phoneInput.classList.add('error');
+          phoneInput.classList.remove('valid');
+          const errorCode = iti.getValidationError();
+          errorContainer.textContent = getErrorMessage(errorCode);
+          errorContainer.style.display = 'block';
+          return false;
+        }
+        
+        // Get full international number in E.164 format
+        phoneNumber = iti.getNumber();
+        
+        // Remove error styling
+        phoneInput.classList.remove('error');
+        phoneInput.classList.add('valid');
+        errorContainer.style.display = 'none';
+      } else {
+        // Fallback: use raw input value with basic HTML5 validation
+        phoneNumber = phoneInput.value.trim();
+        
+        // Basic validation - check if phone number is not empty (HTML5 required attribute handles this)
+        if (!phoneNumber) {
+          errorContainer.textContent = 'Please enter a phone number';
+          errorContainer.style.display = 'block';
+          return false;
+        }
+        
+        // If no country code, add default Senegal code
+        if (!phoneNumber.startsWith('+')) {
+          phoneNumber = '+221' + phoneNumber;
+        }
+      }
+      
+      // Populate hidden field
+      phoneNumberFull.value = phoneNumber;
+      
+      // Submit form
+      form.submit();
+    });
+  </script
 </body>
 </html>
   `.trim();

@@ -197,6 +197,175 @@ The following mobile money payment methods are supported through Paydunya:
 - **Moov Money** (Côte d'Ivoire) - `moov_ci`
 - **Wave** - `wave`
 
+## Enhanced International Phone Input
+
+The payment portal features an enhanced phone number input powered by the [intl-tel-input](https://github.com/jackocnr/intl-tel-input) library. This provides a superior user experience with automatic country detection, real-time formatting, and validation.
+
+### Key Features
+
+- 🌍 **Country Selection**: Visual country flags with searchable dropdown of all countries
+- 📱 **Smart Formatting**: Automatic phone number formatting as you type based on selected country
+- ✅ **Real-time Validation**: Instant feedback with visual indicators (green for valid, red for invalid)
+- 🎯 **Auto-detection**: Automatically detects country from international phone numbers
+- 📲 **Mobile Optimized**: Fullscreen country picker on mobile devices for better usability
+- 🇸🇳 **Senegal Default**: Defaults to Senegal (+221) with West African countries prioritized
+- 🔄 **Backward Compatible**: Seamlessly integrates with existing payment processing
+
+### How It Works
+
+The enhanced phone input automatically:
+
+1. **Displays country flag and dial code** next to the input field
+2. **Formats numbers in real-time** according to the selected country's format
+3. **Validates phone numbers** against international standards for the selected country
+4. **Converts to E.164 format** (+[country_code][number]) for submission to the backend
+5. **Provides visual feedback** with color-coded borders (green = valid, red = invalid)
+
+### Default Configuration
+
+The phone input is configured with the following defaults:
+
+- **Default Country**: Senegal (SN) with +221 dial code
+- **Preferred Countries**: Senegal, Côte d'Ivoire, Mali, Burkina Faso, Guinea (displayed at top of list)
+- **Validation Type**: Mobile numbers only
+- **Format**: E.164 international format for submission (e.g., `+221771234567`)
+
+### Using the Enhanced Phone Input
+
+#### Basic Usage
+
+1. The country selector defaults to Senegal 🇸🇳 (+221)
+2. Type your phone number - it formats automatically as you type
+3. The input validates on blur and shows:
+   - **Green border** ✓ if the number is valid
+   - **Red border** ✗ with error message if invalid
+4. On form submission, the number is automatically converted to E.164 format
+
+#### Changing Countries
+
+1. Click the country flag/selector on the left side of the input
+2. Search for a country by typing in the search box
+3. Select your country from the list
+4. Your number will automatically reformat for the selected country
+
+#### Mobile Experience
+
+On mobile devices:
+- Country selection opens as a **fullscreen popup** for easier selection
+- **Numeric keyboard** appears automatically when entering phone number
+- **Search functionality** helps quickly find countries
+- Touch-optimized interface with larger tap targets
+
+### Phone Number Formats
+
+The enhanced input accepts and formats various phone number formats:
+
+#### Input Formats Accepted
+
+```
+National format:     771234567
+International:       +221771234567
+With spaces:         +221 77 123 45 67
+With parentheses:    +221 (77) 123-4567
+```
+
+#### Output Format (E.164)
+
+All phone numbers are submitted to the backend in **E.164 format**:
+
+```
++221771234567
+```
+
+This is the international standard format:
+- Starts with `+`
+- Followed by country code (1-3 digits)
+- Followed by subscriber number (up to 15 digits total)
+- No spaces, parentheses, or other formatting
+
+### Validation Error Messages
+
+The input provides specific error messages for different validation issues:
+
+| Error | Message | Cause |
+|-------|---------|-------|
+| Invalid country code | "Invalid country code" | Country code doesn't exist |
+| Too short | "Phone number is too short" | Number has fewer digits than required |
+| Too long | "Phone number is too long" | Number has more digits than allowed |
+| Invalid format | "Invalid phone number" | Number doesn't match country's format |
+| General error | "Please enter a valid phone number" | Other validation issues |
+
+### Prepopulation with Enhanced Input
+
+The enhanced phone input works seamlessly with URL prepopulation:
+
+#### Example 1: International Format (Auto-detects Country)
+```
+?phoneNumber=%2B221771234567
+```
+- Country automatically detected as Senegal 🇸🇳
+- Number formatted as: (77) 123-4567
+- Dial code shown separately: +221
+
+#### Example 2: Different Country
+```
+?phoneNumber=%2B33612345678
+```
+- Country automatically detected as France 🇫🇷
+- Number formatted according to French format
+- Dial code shown: +33
+
+#### Example 3: National Format (Uses Default Country)
+```
+?phoneNumber=771234567
+```
+- Default country used: Senegal 🇸🇳
+- Number formatted as: (77) 123-4567
+- Dial code added: +221
+
+### Customizing the Default Country
+
+If you need to change the default country from Senegal, modify the initialization in `src/templates/payment.template.ts`:
+
+```javascript
+const iti = window.intlTelInput(phoneInput, {
+  initialCountry: "ci",  // Change to Côte d'Ivoire
+  preferredCountries: ["ci", "sn", "ml", "bf", "gn"],  // Reorder preferred countries
+  // ... other options
+});
+```
+
+**Common Country Codes**:
+- `sn` - Senegal (+221)
+- `ci` - Côte d'Ivoire (+225)
+- `ml` - Mali (+223)
+- `bf` - Burkina Faso (+226)
+- `gn` - Guinea (+224)
+- `gh` - Ghana (+233)
+- `ng` - Nigeria (+234)
+- `fr` - France (+33)
+
+### Technical Implementation
+
+The enhanced phone input is implemented using:
+
+- **Library**: intl-tel-input v24.7.0+
+- **Loading**: CDN-based (no build dependencies)
+- **Assets**: ~60KB initial load, ~320KB with validation utilities
+- **Compatibility**: Works on all modern browsers (Chrome, Firefox, Safari, Edge)
+- **Fallback**: Gracefully degrades to standard HTML5 tel input if CDN fails
+
+### Browser Compatibility
+
+The enhanced phone input is fully supported on:
+
+- ✅ Chrome/Edge (latest)
+- ✅ Firefox (latest)
+- ✅ Safari (latest)
+- ✅ Mobile browsers (iOS Safari, Android Chrome)
+
+If the library fails to load (e.g., CDN unavailable), the form automatically falls back to a standard HTML5 phone input with basic validation.
+
 ## URL Prepopulation Feature
 
 The payment portal supports prepopulating customer information via URL query parameters. This feature enables a smoother checkout experience by reducing the amount of data customers need to enter manually.
