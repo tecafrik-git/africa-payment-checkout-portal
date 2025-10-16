@@ -16,6 +16,13 @@ resource "digitalocean_app" "africa_payment_portal" {
     name   = "africa-payment-checkout-portal"
     region = var.region
 
+    dynamic "domain" {
+      for_each = var.domain != "" ? [1] : []
+      content {
+        name = var.domain
+      }
+    }
+
     service {
       name               = "payment-portal"
       instance_count     = 1

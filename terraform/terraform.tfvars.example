@@ -13,3 +13,6 @@ paydunya_mode        = "test"  # Options: test, live
 
 # Application Configuration
 currency = "XOF"  # Options: XOF, GHS, etc.
+
+# Custom Domain (optional)
+# domain = "payment.yourdomain.com"  # Uncomment and set your custom domain

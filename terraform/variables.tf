@@ -57,3 +57,9 @@ variable "currency" {
   type        = string
   default     = "XOF"
 }
+
+variable "domain" {
+  description = "Custom domain for the app (optional)"
+  type        = string
+  default     = ""
+}

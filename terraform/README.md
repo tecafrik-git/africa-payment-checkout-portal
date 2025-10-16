@@ -68,6 +68,27 @@ Destroy the app:
 terraform destroy
 ```
 
+## Custom Domain
+
+To use a custom domain:
+
+1. Add your domain to `terraform.tfvars`:
+   ```hcl
+   domain = "payment.yourdomain.com"
+   ```
+
+2. Apply the changes:
+   ```bash
+   terraform apply
+   ```
+
+3. Configure DNS:
+   - Add a CNAME record pointing your domain to the app's default URL
+   - Or add an A record pointing to DigitalOcean's IP (shown in dashboard)
+   - Wait for DNS propagation (can take up to 48 hours)
+
+4. DigitalOcean will automatically provision an SSL certificate for your domain
+
 ## Environment Variables
 
 The following environment variables are configured automatically:
