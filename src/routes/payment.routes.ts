@@ -8,11 +8,17 @@ const paymentService = new PaymentService();
 
 /**
  * GET /payment - Display payment form with product details
- * Query parameters: amount (required), productName (required)
+ * Query parameters: 
+ *   - amount (required)
+ *   - productName (required)
+ *   - firstName (optional)
+ *   - lastName (optional)
+ *   - phoneNumber (optional)
+ *   - paymentMethod (optional)
  */
 router.get('/payment', (req: Request, res: Response): void => {
     try {
-        const { amount, productName } = req.query;
+        const { amount, productName, firstName, lastName, phoneNumber, paymentMethod } = req.query;
 
         // Validate required query parameters
         if (!amount || !productName) {
@@ -37,11 +43,26 @@ router.get('/payment', (req: Request, res: Response): void => {
             return;
         }
 
-        // Render payment form
+        // Validate and normalize optional paymentMethod parameter
+        let validatedPaymentMethod: string | undefined;
+        if (paymentMethod) {
+            const normalizedMethod = (paymentMethod as string).toUpperCase();
+            // Only accept valid payment methods, ignore invalid ones
+            if (normalizedMethod === 'WAVE' || normalizedMethod === 'ORANGE_MONEY') {
+                validatedPaymentMethod = normalizedMethod;
+            }
+            // Invalid payment methods are silently ignored (set to undefined)
+        }
+
+        // Render payment form with optional prepopulated fields
         res.send(
             renderPaymentForm({
                 amount: amountNum,
                 productName: productName as string,
+                firstName: firstName as string | undefined,
+                lastName: lastName as string | undefined,
+                phoneNumber: phoneNumber as string | undefined,
+                paymentMethod: validatedPaymentMethod,
             })
         );
     } catch (error) {

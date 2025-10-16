@@ -100,9 +100,15 @@ interface Config {
 **Routes**:
 
 1. `GET /payment`
-   - Query Parameters: `amount` (required), `productName` (required)
-   - Response: HTML payment form
-   - Error Cases: Missing parameters return 400 with error page
+   - Query Parameters: 
+     - `amount` (required): Payment amount
+     - `productName` (required): Product name
+     - `firstName` (optional): Prepopulate first name field
+     - `lastName` (optional): Prepopulate last name field
+     - `phoneNumber` (optional): Prepopulate phone number field
+     - `paymentMethod` (optional): Preselect payment method
+   - Response: HTML payment form with prepopulated values
+   - Error Cases: Missing required parameters return 400 with error page
 
 2. `POST /payment/process`
    - Body: `{ firstName, lastName, phoneNumber, paymentMethod, amount, productName }`
@@ -161,6 +167,10 @@ interface PaymentFormData {
   amount: number;
   productName: string;
   error?: string;
+  firstName?: string;
+  lastName?: string;
+  phoneNumber?: string;
+  paymentMethod?: string;
 }
 
 interface ErrorPageData {
@@ -184,6 +194,8 @@ function renderSuccessPage(data: SuccessPageData): string;
 - Black (#000000) primary color for text and borders
 - Yellow (#FFDB15) secondary color for buttons and accents
 - Form validation attributes (required, pattern for phone)
+- Support for prepopulating form fields via optional properties
+- All prepopulated fields remain editable by users
 - Inline CSS to avoid external dependencies
 
 ### 6. Custom Types (payment.types.ts)
@@ -220,10 +232,14 @@ export interface ValidatedPaymentInput {
 
 1. **URL Parameters** → `PaymentFormData`
    - Extracted from query string
+   - Required: `amount`, `productName`
+   - Optional: `firstName`, `lastName`, `phoneNumber`, `paymentMethod`
    - Validated for presence and type
+   - Optional parameters passed directly to template as optional properties
 
 2. **Form Submission** → `PaymentFormInput`
    - Raw string data from POST body
+   - May contain user-edited values from prepopulated fields
    - Requires validation and transformation
 
 3. **Validated Input** → `ValidatedPaymentInput`
@@ -248,15 +264,32 @@ For Paydunya provider, the supported mobile money payment methods are:
 
 The payment form will display these as dropdown options with user-friendly labels.
 
+### URL Prepopulation
+
+When optional query parameters are provided in the payment URL, the form fields will be prepopulated:
+
+**Example URL**:
+```
+/payment?amount=5000&productName=Premium%20Plan&firstName=John&lastName=Doe&phoneNumber=%2B221771234567&paymentMethod=WAVE
+```
+
+**Prepopulation Behavior**:
+- Values are URL-decoded and inserted into form field `value` attributes
+- For select dropdowns, the matching option is marked as `selected`
+- Invalid payment method values are ignored (form shows default empty selection)
+- All fields remain editable regardless of prepopulation
+- Form validation still applies on submission
+
 ## Error Handling
 
 ### Error Categories
 
 1. **Validation Errors** (400 Bad Request)
-   - Missing required query parameters
+   - Missing required query parameters (`amount`, `productName`)
    - Missing required form fields
    - Invalid phone number format
    - Invalid amount (non-numeric or negative)
+   - Note: Invalid optional prepopulation parameters are silently ignored
 
 2. **SDK Errors** (500 Internal Server Error)
    - Payment provider API failures

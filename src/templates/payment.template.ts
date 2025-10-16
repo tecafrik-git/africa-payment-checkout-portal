@@ -11,6 +11,10 @@ export interface PaymentFormData {
     amount: number;
     productName: string;
     error?: string;
+    firstName?: string;
+    lastName?: string;
+    phoneNumber?: string;
+    paymentMethod?: string;
 }
 
 /**
@@ -34,7 +38,7 @@ export interface SuccessPageData {
  * Renders the payment form with product details and customer input fields
  */
 export function renderPaymentForm(data: PaymentFormData): string {
-    const { amount, productName, error } = data;
+    const { amount, productName, error, firstName, lastName, phoneNumber, paymentMethod } = data;
 
     return `
 <!DOCTYPE html>
@@ -195,12 +199,12 @@ export function renderPaymentForm(data: PaymentFormData): string {
       
       <div class="form-group">
         <label for="firstName">First Name *</label>
-        <input type="text" id="firstName" name="firstName" required>
+        <input type="text" id="firstName" name="firstName" value="${firstName || ''}" required>
       </div>
       
       <div class="form-group">
         <label for="lastName">Last Name *</label>
-        <input type="text" id="lastName" name="lastName" required>
+        <input type="text" id="lastName" name="lastName" value="${lastName || ''}" required>
       </div>
       
       <div class="form-group">
@@ -209,6 +213,7 @@ export function renderPaymentForm(data: PaymentFormData): string {
           type="tel" 
           id="phoneNumber" 
           name="phoneNumber" 
+          value="${phoneNumber || ''}"
           placeholder="+221771234567"
           pattern="\\+?[0-9]{10,15}"
           required>
@@ -218,8 +223,8 @@ export function renderPaymentForm(data: PaymentFormData): string {
         <label for="paymentMethod">Payment Method *</label>
         <select id="paymentMethod" name="paymentMethod" required>
           <option value="">Select payment method</option>
-          <option value="WAVE">Wave</option>
-          <option value="ORANGE_MONEY">Orange Money</option>
+          <option value="WAVE"${paymentMethod === 'WAVE' ? ' selected' : ''}>Wave</option>
+          <option value="ORANGE_MONEY"${paymentMethod === 'ORANGE_MONEY' ? ' selected' : ''}>Orange Money</option>
         </select>
       </div>
       

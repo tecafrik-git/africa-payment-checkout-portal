@@ -141,11 +141,18 @@ Display the payment form with product details.
 **Query Parameters**:
 - `amount` (required): Payment amount in the configured currency
 - `productName` (required): Name of the product being purchased
+- `firstName` (optional): Prepopulate the first name field
+- `lastName` (optional): Prepopulate the last name field
+- `phoneNumber` (optional): Prepopulate the phone number field
+- `paymentMethod` (optional): Preselect the payment method (e.g., `orange_money_ci`, `mtn_ci`, `moov_ci`, `wave`)
 
 **Example**:
 ```bash
-# Browser
+# Browser - Basic
 http://localhost:3000/payment?amount=5000&productName=Premium%20Subscription
+
+# Browser - With prepopulated customer information
+http://localhost:3000/payment?amount=5000&productName=Premium%20Subscription&firstName=John&lastName=Doe&phoneNumber=%2B221771234567&paymentMethod=orange_money_ci
 
 # curl
 curl "http://localhost:3000/payment?amount=5000&productName=Premium%20Subscription"
@@ -190,6 +197,72 @@ The following mobile money payment methods are supported through Paydunya:
 - **Moov Money** (Côte d'Ivoire) - `moov_ci`
 - **Wave** - `wave`
 
+## URL Prepopulation Feature
+
+The payment portal supports prepopulating customer information via URL query parameters. This feature enables a smoother checkout experience by reducing the amount of data customers need to enter manually.
+
+### How It Works
+
+When you include optional query parameters in the payment URL, the corresponding form fields will be automatically filled with the provided values. Customers can still edit any prepopulated field before submitting the form.
+
+### Optional Query Parameters
+
+| Parameter | Description | Format | Example |
+|-----------|-------------|--------|---------|
+| `firstName` | Customer's first name | String | `John` |
+| `lastName` | Customer's last name | String | `Doe` |
+| `phoneNumber` | Customer's phone number | International format with + | `%2B221771234567` (URL-encoded `+221771234567`) |
+| `paymentMethod` | Preferred payment method | One of: `orange_money_ci`, `mtn_ci`, `moov_ci`, `wave` | `orange_money_ci` |
+
+**Note**: Invalid `paymentMethod` values are silently ignored, and the form will display the default empty selection.
+
+### URL Prepopulation Examples
+
+#### Example 1: Prepopulate Name Only
+```
+http://localhost:3000/payment?amount=5000&productName=Premium%20Plan&firstName=Marie&lastName=Diallo
+```
+- First name field shows: "Marie"
+- Last name field shows: "Diallo"
+- Phone number and payment method remain empty
+
+#### Example 2: Prepopulate All Customer Information
+```
+http://localhost:3000/payment?amount=10000&productName=Monthly%20Subscription&firstName=Jean&lastName=Kouassi&phoneNumber=%2B2250707123456&paymentMethod=mtn_ci
+```
+- First name field shows: "Jean"
+- Last name field shows: "Kouassi"
+- Phone number field shows: "+2250707123456"
+- Payment method dropdown preselects: "MTN Mobile Money"
+
+#### Example 3: Prepopulate Phone and Payment Method
+```
+http://localhost:3000/payment?amount=2500&productName=Basic%20Plan&phoneNumber=%2B221771234567&paymentMethod=wave
+```
+- Phone number field shows: "+221771234567"
+- Payment method dropdown preselects: "Wave"
+- Name fields remain empty
+
+### Use Cases for URL Prepopulation
+
+1. **Returning Customers**: If you have customer information from a previous interaction, prepopulate their details to speed up checkout.
+
+2. **CRM Integration**: When sending payment links via email or SMS from your CRM system, include customer information to personalize the experience.
+
+3. **Mobile App Integration**: When redirecting from a mobile app where you already have user data, pass it along to minimize data entry.
+
+4. **Subscription Renewals**: For recurring payments, prepopulate all customer information so they only need to confirm and pay.
+
+5. **Assisted Sales**: Customer service representatives can generate personalized payment links with customer information already filled in.
+
+### Important Notes
+
+- All prepopulated fields remain **fully editable** by the customer
+- Form validation still applies regardless of prepopulation
+- Invalid or missing optional parameters are gracefully ignored
+- Phone numbers must be URL-encoded (e.g., `+` becomes `%2B`)
+- Required parameters (`amount` and `productName`) must always be provided
+
 ## Example Usage Scenarios
 
 ### Scenario 1: Basic Payment Flow (Browser)
@@ -209,7 +282,24 @@ http://localhost:3000/payment?amount=10000&productName=Monthly%20Subscription
 
 4. You'll be redirected to the Paydunya payment page to complete the transaction
 
-### Scenario 2: Programmatic Payment Initiation
+### Scenario 2: Payment Flow with Prepopulated Customer Information
+
+1. Navigate to the payment URL with customer information:
+```
+http://localhost:3000/payment?amount=10000&productName=Monthly%20Subscription&firstName=Jean&lastName=Kouassi&phoneNumber=%2B2250707123456&paymentMethod=orange_money_ci
+```
+
+2. Review the prepopulated form (all fields are editable):
+   - First Name: Jean ✓ (prepopulated)
+   - Last Name: Kouassi ✓ (prepopulated)
+   - Phone Number: +2250707123456 ✓ (prepopulated)
+   - Payment Method: Orange Money ✓ (preselected)
+
+3. Make any necessary edits and click "Pay Now"
+
+4. You'll be redirected to the Paydunya payment page to complete the transaction
+
+### Scenario 3: Programmatic Payment Initiation
 
 ```bash
 # Step 1: Get the payment form (optional, for testing)
@@ -226,13 +316,39 @@ curl -X POST http://localhost:3000/payment/process \
   -d "productName=Test Product"
 ```
 
-### Scenario 3: Integration with Your Application
+### Scenario 4: Integration with Your Application
 
 ```javascript
-// Generate payment link for your users
+// Generate basic payment link
 const paymentUrl = `http://localhost:3000/payment?amount=${amount}&productName=${encodeURIComponent(productName)}`;
 
 // Redirect user to payment portal
+window.location.href = paymentUrl;
+```
+
+### Scenario 5: Integration with Prepopulated Customer Data
+
+```javascript
+// Generate payment link with customer information for returning users
+const customer = {
+  firstName: 'Marie',
+  lastName: 'Diallo',
+  phoneNumber: '+221771234567',
+  preferredMethod: 'orange_money_ci'
+};
+
+const params = new URLSearchParams({
+  amount: '5000',
+  productName: 'Premium Subscription',
+  firstName: customer.firstName,
+  lastName: customer.lastName,
+  phoneNumber: customer.phoneNumber,
+  paymentMethod: customer.preferredMethod
+});
+
+const paymentUrl = `http://localhost:3000/payment?${params.toString()}`;
+
+// Redirect user to prepopulated payment form
 window.location.href = paymentUrl;
 ```
 

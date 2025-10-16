@@ -77,3 +77,25 @@
   - Provide example usage with curl or browser
   - Include instructions for obtaining Paydunya credentials
   - _Requirements: 6.3, 6.4_
+
+- [x] 10. Add URL prepopulation support for customer information
+  - Update PaymentFormData interface to include optional firstName, lastName, phoneNumber, and paymentMethod fields
+  - Modify GET /payment route handler to extract optional query parameters
+  - Update renderPaymentForm template to prepopulate input fields with provided values
+  - Ensure invalid paymentMethod values are ignored and default to empty selection
+  - Verify all prepopulated fields remain editable
+  - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7_
+
+- [x] 10.1 Write tests for URL prepopulation
+  - Test GET /payment with prepopulated firstName, lastName, phoneNumber
+  - Test GET /payment with valid paymentMethod prepopulation
+  - Test GET /payment with invalid paymentMethod (should be ignored)
+  - Test form rendering with partial prepopulation
+  - Verify form validation still works with prepopulated values
+  - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.7, 7.8_
+
+- [x] 11. Update documentation for URL prepopulation
+  - Add examples of URLs with prepopulated customer information to README.md
+  - Document all optional query parameters and their expected formats
+  - Include use cases for URL prepopulation feature
+  - _Requirements: 7.1, 7.2, 7.3, 7.4_

@@ -75,3 +75,18 @@ This feature implements a simple payment portal NodeJS server that integrates wi
 3. WHEN the project is set up THEN the system SHALL include only necessary dependencies (@tecafrik/africa-payment-sdk, web framework, TypeScript)
 4. WHEN the server is running THEN the system SHALL log startup information including the port number
 5. WHEN the server handles errors THEN the system SHALL provide appropriate HTTP status codes and error messages
+
+### Requirement 7
+
+**User Story:** As a merchant, I want to prepopulate customer information in the payment form URL, so that customers have a smoother checkout experience with less data entry.
+
+#### Acceptance Criteria
+
+1. WHEN a user navigates to the payment form with `firstName` query parameter THEN the system SHALL prepopulate the first name field with the provided value
+2. WHEN a user navigates to the payment form with `lastName` query parameter THEN the system SHALL prepopulate the last name field with the provided value
+3. WHEN a user navigates to the payment form with `phoneNumber` query parameter THEN the system SHALL prepopulate the phone number field with the provided value
+4. WHEN a user navigates to the payment form with `paymentMethod` query parameter THEN the system SHALL preselect the specified payment method in the dropdown
+5. WHEN any prepopulation query parameters are missing THEN the system SHALL display empty form fields for those parameters
+6. WHEN prepopulated values are displayed THEN the system SHALL still allow users to edit all fields before submission
+7. WHEN an invalid `paymentMethod` value is provided THEN the system SHALL ignore it and display the default empty selection
+8. WHEN the form is submitted THEN the system SHALL validate all fields regardless of whether they were prepopulated or manually entered

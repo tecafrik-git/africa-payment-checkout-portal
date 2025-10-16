@@ -116,6 +116,233 @@ describe('Payment Routes Integration Tests', () => {
                 expect(response.text).toContain('Invalid amount');
             });
         });
+
+        describe('with optional prepopulation parameters', () => {
+            it('should prepopulate firstName when provided', async () => {
+                const response = await request(app)
+                    .get('/payment')
+                    .query({ 
+                        amount: '5000', 
+                        productName: 'Test Product',
+                        firstName: 'John'
+                    });
+
+                expect(response.status).toBe(200);
+                expect(response.text).toContain('value="John"');
+            });
+
+            it('should prepopulate lastName when provided', async () => {
+                const response = await request(app)
+                    .get('/payment')
+                    .query({ 
+                        amount: '5000', 
+                        productName: 'Test Product',
+                        lastName: 'Doe'
+                    });
+
+                expect(response.status).toBe(200);
+                expect(response.text).toContain('value="Doe"');
+            });
+
+            it('should prepopulate phoneNumber when provided', async () => {
+                const response = await request(app)
+                    .get('/payment')
+                    .query({ 
+                        amount: '5000', 
+                        productName: 'Test Product',
+                        phoneNumber: '+221771234567'
+                    });
+
+                expect(response.status).toBe(200);
+                expect(response.text).toContain('value="+221771234567"');
+            });
+
+            it('should preselect valid paymentMethod WAVE', async () => {
+                const response = await request(app)
+                    .get('/payment')
+                    .query({ 
+                        amount: '5000', 
+                        productName: 'Test Product',
+                        paymentMethod: 'WAVE'
+                    });
+
+                expect(response.status).toBe(200);
+                expect(response.text).toContain('value="WAVE" selected');
+            });
+
+            it('should preselect valid paymentMethod ORANGE_MONEY', async () => {
+                const response = await request(app)
+                    .get('/payment')
+                    .query({ 
+                        amount: '5000', 
+                        productName: 'Test Product',
+                        paymentMethod: 'ORANGE_MONEY'
+                    });
+
+                expect(response.status).toBe(200);
+                expect(response.text).toContain('value="ORANGE_MONEY" selected');
+            });
+
+            it('should ignore invalid paymentMethod and show default empty selection', async () => {
+                const response = await request(app)
+                    .get('/payment')
+                    .query({ 
+                        amount: '5000', 
+                        productName: 'Test Product',
+                        paymentMethod: 'INVALID_METHOD'
+                    });
+
+                expect(response.status).toBe(200);
+                expect(response.text).not.toContain('selected');
+            });
+
+            it('should prepopulate all customer fields when provided', async () => {
+                const response = await request(app)
+                    .get('/payment')
+                    .query({ 
+                        amount: '5000', 
+                        productName: 'Test Product',
+                        firstName: 'John',
+                        lastName: 'Doe',
+                        phoneNumber: '+221771234567',
+                        paymentMethod: 'WAVE'
+                    });
+
+                expect(response.status).toBe(200);
+                expect(response.text).toContain('value="John"');
+                expect(response.text).toContain('value="Doe"');
+                expect(response.text).toContain('value="+221771234567"');
+                expect(response.text).toContain('value="WAVE" selected');
+            });
+
+            it('should handle partial prepopulation correctly', async () => {
+                const response = await request(app)
+                    .get('/payment')
+                    .query({ 
+                        amount: '5000', 
+                        productName: 'Test Product',
+                        firstName: 'John',
+                        paymentMethod: 'WAVE'
+                    });
+
+                expect(response.status).toBe(200);
+                expect(response.text).toContain('value="John"');
+                expect(response.text).toContain('value="WAVE" selected');
+                // lastName and phoneNumber should be empty
+                expect(response.text).toMatch(/name="lastName"[^>]*value=""/);
+            });
+
+            it('should handle case-insensitive paymentMethod values', async () => {
+                const response = await request(app)
+                    .get('/payment')
+                    .query({ 
+                        amount: '5000', 
+                        productName: 'Test Product',
+                        paymentMethod: 'wave'
+                    });
+
+                expect(response.status).toBe(200);
+                expect(response.text).toContain('value="WAVE" selected');
+            });
+        });
+
+        describe('form validation with prepopulated values', () => {
+            it('should validate form submission even with prepopulated values', async () => {
+                // First, verify the form renders with prepopulated values
+                const getResponse = await request(app)
+                    .get('/payment')
+                    .query({ 
+                        amount: '5000', 
+                        productName: 'Test Product',
+                        firstName: 'John',
+                        lastName: 'Doe',
+                        phoneNumber: '+221771234567',
+                        paymentMethod: 'WAVE'
+                    });
+
+                expect(getResponse.status).toBe(200);
+                expect(getResponse.text).toContain('value="John"');
+
+                // Now submit the form with valid data (simulating user kept prepopulated values)
+                const mockResult = {
+                    success: true,
+                    redirectUrl: 'https://paydunya.com/checkout/abc123',
+                    transactionId: 'TXN-123456',
+                };
+                mockInitiatePayment.mockResolvedValue(mockResult);
+
+                const postResponse = await request(app)
+                    .post('/payment/process')
+                    .send({
+                        firstName: 'John',
+                        lastName: 'Doe',
+                        phoneNumber: '+221771234567',
+                        paymentMethod: 'WAVE',
+                        amount: '5000',
+                        productName: 'Test Product',
+                    });
+
+                expect(postResponse.status).toBe(302);
+                expect(mockInitiatePayment).toHaveBeenCalled();
+            });
+
+            it('should reject invalid data even if form was prepopulated', async () => {
+                // Form was prepopulated with valid data
+                const getResponse = await request(app)
+                    .get('/payment')
+                    .query({ 
+                        amount: '5000', 
+                        productName: 'Test Product',
+                        firstName: 'John',
+                        phoneNumber: '+221771234567'
+                    });
+
+                expect(getResponse.status).toBe(200);
+
+                // But user submits with invalid phone number
+                const postResponse = await request(app)
+                    .post('/payment/process')
+                    .send({
+                        firstName: 'John',
+                        lastName: 'Doe',
+                        phoneNumber: '123', // Invalid phone number
+                        paymentMethod: 'WAVE',
+                        amount: '5000',
+                        productName: 'Test Product',
+                    });
+
+                expect(postResponse.status).toBe(400);
+                expect(postResponse.text).toContain('Invalid phone number format');
+            });
+
+            it('should validate edited prepopulated values on submission', async () => {
+                // Form prepopulated with some values
+                const getResponse = await request(app)
+                    .get('/payment')
+                    .query({ 
+                        amount: '5000', 
+                        productName: 'Test Product',
+                        firstName: 'John'
+                    });
+
+                expect(getResponse.status).toBe(200);
+
+                // User edits and submits with missing required field
+                const postResponse = await request(app)
+                    .post('/payment/process')
+                    .send({
+                        firstName: 'John',
+                        // Missing lastName
+                        phoneNumber: '+221771234567',
+                        paymentMethod: 'WAVE',
+                        amount: '5000',
+                        productName: 'Test Product',
+                    });
+
+                expect(postResponse.status).toBe(400);
+                expect(postResponse.text).toContain('All fields are required');
+            });
+        });
     });
 
     describe('POST /payment/process', () => {
