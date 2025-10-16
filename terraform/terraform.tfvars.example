@@ -1,0 +1,15 @@
+# DigitalOcean Configuration
+do_token      = "your-digitalocean-api-token"
+region        = "nyc"  # Options: nyc, sfo, ams, sgp, lon, fra, tor, blr
+branch        = "main"
+instance_size = "basic-xxs"  # Options: basic-xxs, basic-xs, basic-s, basic-m, professional-xs, etc.
+
+# Paydunya Configuration
+paydunya_master_key  = "your-master-key"
+paydunya_private_key = "your-private-key"
+paydunya_public_key  = "your-public-key"
+paydunya_token       = "your-token"
+paydunya_mode        = "test"  # Options: test, live
+
+# Application Configuration
+currency = "XOF"  # Options: XOF, GHS, etc.
