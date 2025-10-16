@@ -34,7 +34,7 @@ graph TD
 ### Project Structure
 
 ```
-payment-portal-server/
+africa-payment-checkout-portal/
 ├── src/
 │   ├── index.ts                 # Server entry point
 │   ├── config.ts                # Configuration and environment variables

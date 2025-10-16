@@ -22,7 +22,7 @@ A lightweight Node.js payment portal server that integrates with the Paydunya mo
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd payment-portal-server
+cd africa-payment-checkout-portal
 ```
 
 2. Install dependencies:
@@ -524,7 +524,7 @@ window.location.href = paymentUrl;
 ## Project Structure
 
 ```
-payment-portal-server/
+africa-payment-checkout-portal/
 ├── src/
 │   ├── index.ts                 # Server entry point
 │   ├── config.ts                # Configuration management

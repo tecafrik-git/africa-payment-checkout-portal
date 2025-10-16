@@ -1,7 +1,7 @@
 {
-  "name": "payment-portal-server",
+  "name": "africa-payment-checkout-portal",
   "version": "1.0.0",
-  "description": "Payment portal server with Paydunya integration",
+  "description": "Checkout portal for collecting payments in Africa",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
